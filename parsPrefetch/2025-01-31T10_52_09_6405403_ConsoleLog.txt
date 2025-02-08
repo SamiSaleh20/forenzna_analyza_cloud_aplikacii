@@ -1,0 +1,11 @@
+[2025-01-31 11:52:10.0505989 | INF] KAPE directory: C:\Users\sami\OneDrive - UPJŠ\Pracovná plocha\kape\KAPE
+[2025-01-31 11:52:10.0596437 | INF] Command line:   --msource C: --mdest C:\Users\sami\PycharmProjects\forenzna_analyza_cloud_aplikacii\parsPrefetch --tflush --module PECmd --gui 
+[2025-01-31 11:52:10.0606082 | INF] System info: Machine name: DESKTOP-FC31D8F, 64-bit: true, User: sami OS: "Windows10" (10.0.26100)
+[2025-01-31 11:52:11.2130768 | INF] Using Module operations
+[2025-01-31 11:52:11.2270888 | INF]     Found processor Executable: PECmd.exe, Cmd line: -d %sourceDirectory% --csv %destinationDirectory% --mp -q, Export: csv, Append: False!
+[2025-01-31 11:52:11.2280870 | INF] Discovered 1 processor to run
+[2025-01-31 11:52:11.2280870 | INF] Executing modules with file masks...
+[2025-01-31 11:52:11.2280870 | INF] Executing remaining modules...
+[2025-01-31 11:52:11.2400989 | INF]   Running PECmd.exe: -d C:\Users\sami\PycharmProjects\forenzna_analyza_cloud_aplikacii --csv C:\Users\sami\PycharmProjects\forenzna_analyza_cloud_aplikacii\parsPrefetch\ProgramExecution --mp -q
+[2025-01-31 11:52:15.8918195 | INF] Executed 1 processor in 4.6735 seconds
+[2025-01-31 11:52:15.8928193 | INF] Total execution time: 4.6791 seconds
