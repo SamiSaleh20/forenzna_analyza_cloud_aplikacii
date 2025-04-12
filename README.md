@@ -1,7 +1,9 @@
-this code is supposed to make forenscis analysis of cloud storages Onedrive GoogleDrive and Dropbox more easier.
-Using kape it takes files and then made the important files for forenscis analyse into csv files and also made a brief overview "vysledok.txt" where are some basic informations about the cloud storages in system.
+This tool automates forensic analysis of cloud storage services OneDrive,Google Drive and Dropbox by using KAPE.  
+It collects relevant files and generates:
+CSV reports with key forensic data.
+ A summary file: `vysledok.txt`, providing a brief overview of detected cloud storage activity on the system.
 
-Before starting the code this steps must be made:
+Before running the script, complete the following steps:
 1.download kape
 2.download the PECmd from kape separatly on eric zimmerman tools https://download.ericzimmermanstools.com/net6/PECmd.zip (other version if your pc is not compatible)
 3.on kape change the editor for onedrive target "OneDrive_Metadata" RecreateDirectories parameter from true to false
