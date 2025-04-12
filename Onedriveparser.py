@@ -11,11 +11,13 @@ import sys
 
 
 
-
+#metoda ktora berie informacie z onedrive
 def parsing(freeversion,result):
+
     current_directory = os.getcwd()
     extracted_data = os.path.join(current_directory, "onedriveMetadata")
     python_executable = sys.executable
+    #vytvorime vo vysledku priecinok na spracovane data z onedrive
     onedriveMetadataparsed = os.path.join(result, "onedriveMetadataparsed")
     current_directory = os.getcwd()
     pathToParsed = os.path.join(result, "onedriveMetadataparsed")
@@ -23,37 +25,46 @@ def parsing(freeversion,result):
         shutil.rmtree(pathToParsed)
     os.makedirs(pathToParsed)
     directory = Path(os.path.join(current_directory, "onedriveMetadata"))
-
+    #vytvorime priecinok pre syncEngineDatabase_db
     if not os.path.exists(os.path.join(pathToParsed, "syncEngineDatabase_db")):
         os.makedirs(os.path.join(pathToParsed, "syncEngineDatabase_db"))
     syncEngineDatabase_db_parsed = os.path.join(pathToParsed, "syncEngineDatabase_db")
+
+    #ak je to onedrive verzia zdarma
     if freeversion==1:
+        #najdeme databazu
         for file in directory.rglob("*Personal_SyncEngineDatabase.db"):
             syncendinedatabase = file
             print(file)
+        #spracujeme ju do csv suboru
         dbparser(syncendinedatabase, syncEngineDatabase_db_parsed)
+        #najdeme a zapiseme profileServiceResponse.txt do vysledku
         for file in directory.rglob("*-profileServiceResponse.txt"):
             print(file)
             shutil.copy(file, os.path.join(result, "onedriveMetadataparsed"))
+
+    # ak je to platena verzia onedrive
     else:
+        # najdeme databazu
         for file in directory.rglob("*Business1_SyncEngineDatabase.db"):
             syncendinedatabase = file
             print(file)
+            # spracujeme ju do csv suboru
         dbparser(syncendinedatabase, syncEngineDatabase_db_parsed)
 
     vysledok=os.path.join(result,"vysledok.txt")
 
+    #zapisujeme zakladne info o onedrive do vysledok.txt
     with open(vysledok, "a", encoding="utf-8") as file1:
+        #zapise o aku verziu ide
         if freeversion==1:
             file1.write("FREE ONEDRIVE: \n")
         else:
             file1.write("ONEDRIVE FOR BUSSINESS: \n")
 
-        # onedrive prefetch
-        file = os.path.join(result, "prefetch.csv")
-        # file="C:\\Users\\sami\\PycharmProjects\\forenzna_analyza_cloud_aplikacii\\prefetch.csv"
 
-        # Načítanie CSV súboru
+        # prefetch udaje
+        file = os.path.join(result, "prefetch.csv")
         df = pd.read_csv(file)
         filtered_rows = df[df['ExecutableName'].astype(str).str.contains(r'ONEDRIVE', case=False)]
         onedrive_rows = filtered_rows[filtered_rows['ExecutableName'].str.upper() == 'ONEDRIVE.EXE']
@@ -63,10 +74,9 @@ def parsing(freeversion,result):
         file1.write(f"Posledne zapnutie OneDrive: {last_run_row['LastRun']} \n")
         file1.write(f"Prve zapnutie OneDrive: {first_run_row['SourceCreated']}  \n")
 
-        # amcache udaje onedrive for bussines
-        file = os.path.join(result, "amcache.csv")
-        # file="C:\\Users\\sami\\PycharmProjects\\forenzna_analyza_cloud_aplikacii\\amcache.csv"
 
+        # amcache udaje
+        file = os.path.join(result, "amcache.csv")
         df = pd.read_csv(file)
         file1.write(f"INFORMACIE Z AMCHACHE: \n")
         print("amcache collums=", df.columns)
@@ -80,10 +90,11 @@ def parsing(freeversion,result):
         file1.write(f"Cesta k exe suboru: {oneDriveexe['FullPath']} \n")
         file1.write(f"Verzia OneDrive: {oneDriveexe['Version']} \n")
 
+
+        # registry udaje
         file = os.path.join(result, "registry.csv")
         file1.write(f"INFORMACIE Z REGISTRY: \n")
         df = pd.read_csv(file)
-
         print(df.columns)
         df = df[df['Key Path'].str.contains(r'OneDrive', na=False, case=False)]
         mail = df.loc[df['Value Name'] == 'UserEmail', 'Value Data']
@@ -107,7 +118,7 @@ def parsing(freeversion,result):
                 file1.write(f"cas poslednej aktualizacie:{datetime.utcfromtimestamp(int(last_update.iloc[0]))} \n")
                 file1.write("emailova adresa pouzivatela:" + mail.to_string(index=False) + "\n")
 
-
+        #zapis z databazovych tabuliek
         df = pd.read_csv(os.path.join(syncEngineDatabase_db_parsed, "od_ClientFile_Records.csv"))
         top_10 = df.nlargest(10, 'lastChange')
         file1.write(f"INFORMACIE ZO SYNCENGINEDATABASE: \n")
@@ -127,7 +138,7 @@ def parsing(freeversion,result):
         file1.write(f"KTO VYTVORIL/MENIL SUBORY V UCTE: {', '.join(unique_combined)} \n")
 
 
-
+    #premenovanie kluca pre logy na general.keystore
     if freeversion == 1:
         for filename in os.listdir(extracted_data):
             if "Personal_general.keystore" in filename:
@@ -144,6 +155,8 @@ def parsing(freeversion,result):
                 # Premenovanie súboru
                 os.rename(old_path, new_path)
                 print(f"Premenovaný: {filename} -> general.keystore")
+                break
+    #volanie kodu pre dekodovanie a vypis informacii z logov o onedrive
     cmd = [
         python_executable, "odl.py", "-o",
         os.path.join(onedriveMetadataparsed, "logs"), "-k",
@@ -151,7 +164,6 @@ def parsing(freeversion,result):
     ]
 
     subprocess.run(cmd)
-
 
 
 

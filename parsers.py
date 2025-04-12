@@ -3,82 +3,84 @@ import csv
 import sqlite3
 import subprocess
 from Registry import Registry
+#metoda na parsovanie databazovych suborov do csv formatu
 def dbparser(pathTofile,pathToexport):
     db_file = pathTofile
 
-    # Pripojenie k databáze
-    connection = sqlite3.connect(db_file)
+    # Pripojenie k databaze
+    connection = sqlite3.connect(db_file, timeout=10)
     cursor = connection.cursor()
 
-    # Načítanie zoznamu tabuliek
+    # nacitanie zoznamu tabuliek
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     tables = cursor.fetchall()
-    print(tables)
 
-    # Export každej tabuľky do CSV
+    # export tabulike do csv
     for table in tables:
         table_name = table[0]
-        csv_file = os.path.join(pathToexport, f"{table_name}.csv")  # Uloženie do priečinka
+        #ulozenie do priecinka databazy
+        csv_file = os.path.join(pathToexport, f"{table_name}.csv")
 
-        # Načítanie údajov z tabuľky
+        # nacitanie udajov z tabulky
         query = f"SELECT * FROM {table_name}"
         cursor.execute(query)
         rows = cursor.fetchall()
-        # Načítanie názvov stĺpcov
+        # nacitanie nazvov stlpcov
         column_names = [description[0] for description in cursor.description]
         processed_rows = []
         for row in rows:
             processed_row = []
             for item in row:
-                if isinstance(item, bytes):  # Ak je položka binárna
-                    processed_row.append(item.hex())  # Uložíme ako hexadecimálny reťazec
+                # ak je binarna hodnota zapis ju v hexadecimalnom formate
+                if isinstance(item, bytes):
+                    processed_row.append(item.hex())
                 else:
-                    processed_row.append(item)  # Necháme položku ako je
+                    processed_row.append(item)
             processed_rows.append(processed_row)
 
-        # Zápis údajov do CSV
+        # zapis udajov do csv
         with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(column_names)  # Hlavička
-            #writer.writerows(rows)
-            writer.writerows(processed_rows)
+            writer.writerow(column_names)
 
-            # Dáta
+            writer.writerows(rows)
+
+
 
         print(f"Tabuľka {table_name} bola exportovaná do {csv_file}.")
+    connection.close()
 
+#metoda na parsovanie registrov v dat formate na csv
 def regparser(ntuser_file,output_file):
-    # Funkcia na prechádzanie kľúčov a export do CSV
+    # funkcia na prechadzanie hive suboru pouzivajuca rekurziu
     def walk_registry(key, writer, parent_key=""):
         for subkey in key.subkeys():
-            # Aktuálna cesta kľúča
+            # aktualna cesta kluca
             full_key = f"{parent_key}\\{subkey.name()}"
-            # Získanie všetkých hodnôt pre kľúč
+            # zsiaknie vsetkcyh hodnot pre kuc
             for value in subkey.values():
-                # Spracovanie hodnôt pred zápisom do CSV
+                # spracovanie hodnot pred jej zapisom do csv
                 processed_value = value.value()
-
-                if isinstance(processed_value, bytes):  # Ak je hodnota binárna
-                    processed_value = processed_value.hex()  # Preveď ju na hexadecimálny reťazec
-
-                # Zápis do CSV: Kľúč, Názov hodnoty, Hodnota, Typ hodnoty
+                #ak binarna hodnota preved do hexadecimalneho formatu
+                if isinstance(processed_value, bytes):
+                    processed_value = processed_value.hex()
+                #zapis do csv cesta,nazov,hodnota,typ
                 writer.writerow([full_key, value.name(), str(processed_value), value.value_type_str()])
 
-                # Rekurzívne prehľadávať podkľúče
+                # rekurzivne volanie pre podkluce
             walk_registry(subkey, writer, full_key)
 
-    # Hlavná logika
-
+    # hlavna logika
     try:
-        # Načítanie NTUSER.DAT
+        # nacitanie NTUSER.DAT
         reg = Registry.Registry(ntuser_file)
 
-        # Otvorenie CSV súboru
+        # otvorenie csv suboru
         with open(output_file, "w", newline='', encoding="utf-8", errors="replace") as csvfile:
             writer = csv.writer(csvfile)
-            # Hlavička CSV súboru
+            # hlavicka csv suboru
             writer.writerow(["Key Path", "Value Name", "Value Data", "Value Type"])
-            # Prechádzanie všetkých kľúčov a hodnôt
+            # prechadzanie a zapisovanie do do csv suboru
             walk_registry(reg.root(), writer)
 
         print(f"Dáta boli úspešne exportované do {output_file}.")

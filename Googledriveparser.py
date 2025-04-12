@@ -11,45 +11,54 @@ from datetime import datetime
 from protobuf_decoder.protobuf_decoder import Parser
 import json
 
+#vybranie dat o googledrive
 def parsing(result):
-    current_directory = os.getcwd()  # cesta k projektu
+    current_directory = os.getcwd()
+    #vytvorenie priecinka pre data
     pathToParsed = os.path.join(result, "googledriveMetadataparsed")
     if os.path.exists(pathToParsed):
         shutil.rmtree(pathToParsed)
     os.makedirs(pathToParsed)
-    # cesta ku extrahovanym metadatam googledrive
-    # directory=Path(os.path.join(current_directory, "googledriveMetadata"))
     if not os.path.exists(os.path.join(pathToParsed, "metadata_sqlite_db")):
         os.makedirs(os.path.join(pathToParsed, "metadata_sqlite_db"))
     metadata_sqlite_db_parsed = os.path.join(pathToParsed, "metadata_sqlite_db")
     directory = Path(os.path.join(current_directory, "googledriveMetadata"))
     metadata_sqlite = nullcontext
+
+    #hladanie metadata_sqlite_db
     for file in directory.rglob("metadata_sqlite_db"):
         metadata_sqlite = file
         print(file)
-    # parsovanie suboru
+    # jeho parsovanie do csv formatu
     dbparser(metadata_sqlite, metadata_sqlite_db_parsed)
+
+    #hladanie mirror_sqlite.db
     for file in directory.rglob("mirror_sqlite.db"):
         metadata_sqlite = file
         print(file)
     if not os.path.exists(os.path.join(pathToParsed, "mirror_sqlite")):
         os.makedirs(os.path.join(pathToParsed, "mirror_sqlite"))
     mirror_sqlite_parsed = os.path.join(pathToParsed, "mirror_sqlite")
+    # jeho parsovanie do csv formatu
     dbparser(metadata_sqlite, mirror_sqlite_parsed)
+
+
     if not os.path.exists(os.path.join(pathToParsed, "logfiles")):
         os.makedirs(os.path.join(pathToParsed, "logfiles"))
-
+    #zapisovanie logov googledrive do vysledku
     for file in directory.rglob("*drive_fs*"):
         print(file)
         shutil.copy(file, os.path.join(pathToParsed, "logfiles"))
         vysledok = os.path.join(result, "vysledok.txt")
+
+    #zapisujeme zakladne info o googledrive do vysledok.txt
     with open(vysledok, "a", encoding="utf-8") as file1:
         file1.write("GOOGLEDRIVE:\n")
-        file1.write("PREFETCH UDAJE:\n")
-        # googledrive prefetch
-        file = os.path.join(result, "prefetch.csv")
 
-        # Načítanie CSV súboru
+
+        #prefetch udaje
+        file1.write("PREFETCH UDAJE:\n")
+        file = os.path.join(result, "prefetch.csv")
         df = pd.read_csv(file)
         filtered_rows = df[df['ExecutableName'].astype(str).str.contains(r'GOOGLEDRIVEFS.EXE', case=False)]
         last_run_row = filtered_rows.loc[filtered_rows['LastRun'].idxmax()]
@@ -57,7 +66,8 @@ def parsing(result):
         file1.write(f"Posledne zapnutie GoogleDrive: {last_run_row['LastRun']} \n")
         file1.write(f"Prve zapnutie GoogleDrive: {first_run_row['SourceCreated']}  \n")
 
-        # googledrive registre
+
+        #registry udaje
         file = os.path.join(result, "registry.csv")
         file1.write(f"INFORMACIE Z REGISTRY: \n")
         df = pd.read_csv(file)
@@ -73,16 +83,18 @@ def parsing(result):
         ]
         file1.write(f"Synchronizovane priecinky: {', '.join(paths)} \n")
 
-        # amcache udaje GoogleDrive
+
+        # amcache udaje
         file = os.path.join(result, "amcache.csv")
         file1.write("AMCACHE UDAJE:\n")
-        # file="C:\\Users\\sami\\PycharmProjects\\forenzna_analyza_cloud_aplikacii\\amcache.csv"
         df = pd.read_csv(file)
         googledriveexes = df[df['Name'].astype(str).str.contains(r'GoogleDriveFS.exe', case=False)]
         googledriveexe = googledriveexes.loc[googledriveexes['Version'].idxmax()]
         file1.write(f"Cesta k exe suboru: {googledriveexe['FullPath']}  \n")
         file1.write(f"Verzia GoogleDrive: {googledriveexe['Version']}  \n")
 
+
+        #zapis z databazovych tabuliek
         file1.write(f"UDAJE Z METADATA_SQLITE_DB:\n")
         df = pd.read_csv(os.path.join(metadata_sqlite_db_parsed, "properties.csv"))
         data = df.loc[df['property'] == 'driveway_account', 'value'].values

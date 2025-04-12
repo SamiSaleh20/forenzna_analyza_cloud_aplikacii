@@ -1,3 +1,0 @@
-event_type,file_event_type,direction,file_id,local_path,server_path,other_user,timestamp
-file,add,upload,f16nzW6iwcgAAAAAAAAABg,C:\Users\Sami1\Dropbox\nieco.txt,11861623185:/nieco.txt,0,1730490984
-file,delete,upload,f16nzW6iwcgAAAAAAAAABw,C:\Users\Sami1\Dropbox\nieco1.txt,,0,1730491127
