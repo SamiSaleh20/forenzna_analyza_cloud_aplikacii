@@ -43,7 +43,7 @@ def dbparser(pathTofile,pathToexport):
             writer = csv.writer(file)
             writer.writerow(column_names)
 
-            writer.writerows(rows)
+            writer.writerows(processed_row)
 
 
 
